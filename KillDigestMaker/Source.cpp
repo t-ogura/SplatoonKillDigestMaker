@@ -13,10 +13,14 @@
 #pragma comment(lib, "C:\\opencv3.4.1\\build\\x64\\vc14\\lib\\opencv_world341.lib")
 #pragma warning(disable : 4996)
 
+#define IMAGE_PROCESSING_SCALE_FACTOR 0.25
+#define TAMPLATE_MATCHING_THRESHOLD 0.80
+#define ADDITIONAL_TIME_BEFORE_KILL 2.5
+#define ADDITIONAL_TIME_AFTER_KILL 0.0
+
 namespace fs = std::experimental::filesystem;
 
 std::string target_movie_directory = "TargetFiles"; // 動画の入っているフォルダー（作ってね）
-
 
 bool ExecCmd(const char* cmd, std::string& stdOut, int& exitCode) {
 	std::shared_ptr<FILE> pipe(_popen(cmd, "r"), [&](FILE* p) {exitCode = _pclose(p); });
@@ -67,7 +71,7 @@ int main() {
 		cv::VideoCapture cap(target_file);
 		float FPS = cap.get(CV_CAP_PROP_FPS);
 
-		float global_scale = 0.25 / cap.get(CV_CAP_PROP_FRAME_HEIGHT) * 1080.f;
+		float global_scale = (IMAGE_PROCESSING_SCALE_FACTOR) / cap.get(CV_CAP_PROP_FRAME_HEIGHT) * 1080.f;
 
 		int frame_num = cap.get(CV_CAP_PROP_FRAME_COUNT);
 		float temp_scale = cap.get(CV_CAP_PROP_FRAME_HEIGHT) / 1080.f;
@@ -90,7 +94,7 @@ int main() {
 			cv::Point pt;
 			double max_value;
 			cv::minMaxLoc(result, NULL, &max_value, NULL, &pt);
-			if (max_value > 0.80) {
+			if (max_value > (TAMPLATE_MATCHING_THRESHOLD)) {
 				key_frames.push(i);
 				std::cout << "  Found";
 			}
@@ -121,8 +125,8 @@ int main() {
 		
 		for (int i = 0; i < key_frames_grouped.size(); i++) {
 			if (key_frames_grouped[i].size() < 5) continue;
-			command("ffmpeg -ss " + std::to_string(key_frames_grouped[i][0] / FPS - 2.5)
-				+ " -i \"" + target_file + "\" -t " + std::to_string((key_frames_grouped[i][key_frames_grouped[i].size() - 1] - key_frames_grouped[i][0]) / FPS)
+			command("ffmpeg -ss " + std::to_string(key_frames_grouped[i][0] / FPS - (ADDITIONAL_TIME_BEFORE_KILL))
+				+ " -i \"" + target_file + "\" -t " + std::to_string((key_frames_grouped[i][key_frames_grouped[i].size() - 1] - key_frames_grouped[i][0]) / FPS + (ADDITIONAL_TIME_AFTER_KILL))
 				+ " -vcodec hevc output/" + std::to_string(output_file_count) + ".mp4");
 			ofs << "file \'" + std::to_string(output_file_count) + ".mp4\'" << std::endl;
 			output_file_count++;
