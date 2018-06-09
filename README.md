@@ -2,8 +2,8 @@
 
 ## 環境
 - Visual Studio 2015
-- OpenCV 3.4.1
-- FFmpeg 20180608-2bd26de
+- OpenCV 3.4.1　https://opencv.org/releases.html
+- FFmpeg 20180608-2bd26de　https://ffmpeg.zeranoe.com/builds/
 
 ## 各設定
 ### Visual Studio 2015
