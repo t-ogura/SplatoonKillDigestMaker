@@ -1,0 +1,34 @@
+%% パラメータ %%
+
+% テンプレートマッチングするときの画像のスケール
+IMAGE_PROCESSING_SCALE_FACTOR 0.25
+
+% テンプレート検出の閾値
+TAMPLATE_MATCHING_THRESHOLD 0.80
+
+% キルの前の何秒間から採用するか
+ADDITIONAL_TIME_BEFORE_KILL 2.5
+
+% キルシーンを後ろに延長したい場合は何秒足したいか
+ADDITIONAL_TIME_AFTER_KILL 0.0
+
+% 連続キルの時　何秒までつなげるか
+CONNECTING_INTERVAL 4.0
+
+% 誤認識を防ぐため，何フレーム連続して検出したら採用するか（推奨：5.0）
+CANDIDATE_FRAME_NUM 5.0
+
+% 何秒ごとにフレームを検索するか
+SEARCHING_FRAME_INTERVAL 1.0
+
+% カット編集でエンコードするか (0 or 1)
+CUT_OUT_ENCORD 1
+
+% 接合編集でエンコードするか (0 or 1)
+OUTPUT_ENCORD 0
+
+% カット編集をスキップするか (0 or 1)
+CUT_OUT_IGNORE 0
+
+% 接合編集をスキップするか (0 or 1)
+OUTPUT_IGNORE 0
