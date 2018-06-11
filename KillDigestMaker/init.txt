@@ -32,3 +32,9 @@ CUT_OUT_IGNORE 0
 
 % 接合編集をスキップするか (0 or 1)
 OUTPUT_IGNORE 0
+
+% 出力動画のサイズを指定するか
+MOVIE_SIZE_DESIGNATION 0
+
+% 出力動画のサイズを指定した場合の動画の縦のサイズ
+MOVIE_SIZE_HEIGHT 1080
