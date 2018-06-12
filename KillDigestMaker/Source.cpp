@@ -341,6 +341,22 @@ int main() {
 			}
 		}
 	}
+	else if (params.OUTPUT_IGNORE != 1) {
+		time_t t = time(NULL);
+		struct tm tm;
+		char str[81];
+
+		localtime_s(&tm, &t);
+		strftime(str, sizeof(str), "%Y%m%d-%H%M%S", &tm);
+
+		std::string output_file_name(str);
+		if (params.OUTPUT_ENCORD == 1) {
+			command("ffmpeg -safe 0 -vcodec hevc -f concat -i output/files.txt " + output_file_name + ".mp4");
+		}
+		else {
+			command("ffmpeg -safe 0 -f concat -i output/files.txt -c:v copy -c:a copy -map 0:v -map 0:a " + output_file_name + ".mp4");
+		}
+	}
 
 	system("pause");
 	return 0;
