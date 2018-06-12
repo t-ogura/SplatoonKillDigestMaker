@@ -278,6 +278,7 @@ int main() {
 
 					std::vector<std::vector<int>> key_frames_grouped;
 					std::vector<int> local_key_frames;
+					if (key_frames.empty()) continue;
 					int prev_value = key_frames.front();
 					while (!key_frames.empty()) {
 						if (abs(prev_value - key_frames.front()) > FPS * (params.CONNECTING_INTERVAL * params.SEARCHING_FRAME_INTERVAL)) {
@@ -288,7 +289,9 @@ int main() {
 						prev_value = key_frames.front();
 						key_frames.pop();
 					}
-					key_frames_grouped.push_back(std::vector<int>(local_key_frames));
+					if (!local_key_frames.empty())
+						key_frames_grouped.push_back(std::vector<int>(local_key_frames));
+					if (key_frames_grouped.empty()) continue;
 					for (int i = 0; i < key_frames_grouped.size(); i++) {
 						if (key_frames_grouped[i].size() < (params.CANDIDATE_FRAME_NUM)) continue;
 						for (int j = 0; j < key_frames_grouped[i].size(); j++) {
