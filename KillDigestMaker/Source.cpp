@@ -190,8 +190,8 @@ void make_py_file(std::string video_file, double A, double B) {
 	ofs << "adm.audioSetShift(0, 0,0)" << std::endl;
 	ofs << "adm.setContainer(\"MP4\", \"muxerType=0\", \"useAlternateMp3Tag=True\")" << std::endl;
 	ofs << "adm.addSegment(0, 0, " << std::to_string(10000000000000000) << ")" << std::endl;
-	ofs << "adm.markerA = " << std::to_string((int)(A * 1000000)) << std::endl;
-	ofs << "adm.markerB = " << std::to_string((int)(B * 1000000)) << std::endl;
+	ofs << "adm.markerA = " << std::to_string((int64)(A * 1000000)) << std::endl;
+	ofs << "adm.markerB = " << std::to_string((int64)(B * 1000000)) << std::endl;
 }
 
 
