@@ -33,10 +33,7 @@ public:
 			}
 			std::vector < std::string> splited_line = split(line, ' ');
 			if (splited_line.size() > 1) {
-				if (splited_line[0] == "IMAGE_PROCESSING_SCALE_FACTOR") {
-					IMAGE_PROCESSING_SCALE_FACTOR = std::atof(splited_line[1].c_str());
-				}
-				else if (splited_line[0] == "TAMPLATE_MATCHING_THRESHOLD") {
+				if (splited_line[0] == "TAMPLATE_MATCHING_THRESHOLD") {
 					TAMPLATE_MATCHING_THRESHOLD = std::atof(splited_line[1].c_str());
 				}
 				else if (splited_line[0] == "ADDITIONAL_TIME_BEFORE_KILL") {
@@ -72,7 +69,6 @@ public:
 		ifs.close();
 	}
 
-	float IMAGE_PROCESSING_SCALE_FACTOR;
 	float TAMPLATE_MATCHING_THRESHOLD;
 	float ADDITIONAL_TIME_BEFORE_KILL;
 	float ADDITIONAL_TIME_AFTER_KILL;
@@ -125,7 +121,6 @@ private:
 	}
 
 	void param_init() {
-		IMAGE_PROCESSING_SCALE_FACTOR = 0.25;
 		TAMPLATE_MATCHING_THRESHOLD = 0.80;
 		ADDITIONAL_TIME_BEFORE_KILL = 2.5;
 		ADDITIONAL_TIME_AFTER_KILL = 0.0;
@@ -142,7 +137,6 @@ private:
 
 	void display_parameters() {
 		std::cout <<
-			"IMAGE_PROCESSING_SCALE_FACTOR\t" << IMAGE_PROCESSING_SCALE_FACTOR << std::endl <<
 			"TAMPLATE_MATCHING_THRESHOLD\t" << TAMPLATE_MATCHING_THRESHOLD << std::endl <<
 			"ADDITIONAL_TIME_BEFORE_KILL\t" << ADDITIONAL_TIME_BEFORE_KILL << std::endl <<
 			"ADDITIONAL_TIME_AFTER_KILL\t" << ADDITIONAL_TIME_AFTER_KILL << std::endl <<
@@ -240,28 +234,28 @@ int main() {
 
 					float FPS = cap.get(CV_CAP_PROP_FPS);
 
-					float global_scale = (params.IMAGE_PROCESSING_SCALE_FACTOR) / cap.get(CV_CAP_PROP_FRAME_HEIGHT) * 1080.f;
-
 					int frame_num = cap.get(CV_CAP_PROP_FRAME_COUNT);
 					float temp_scale = cap.get(CV_CAP_PROP_FRAME_HEIGHT) / 1080.f;
 
 					cv::Mat temp = cv::imread("template.jpg");
-					cv::resize(temp, temp, cv::Size(), global_scale * temp_scale, global_scale * temp_scale);
 
 					std::queue<int> key_frames;
 
 					cv::Mat frame;
-					for (int i = 0; i < frame_num; i += (FPS * (params.SEARCHING_FRAME_INTERVAL))) {
-						cap.set(CV_CAP_PROP_POS_FRAMES, i);
-						cap >> frame;
+					for (int i = 0; i < frame_num; i++) {
+						if (i % ((int)(FPS * params.SEARCHING_FRAME_INTERVAL)) != 0) {
+							cap.grab();
+							continue;
+						}
+						else {
+							cap >> frame;
+						}
 						std::cout << "Searching kill frame... " << i * 100 / (float)frame_num << "%";
 
 						try {
-							cv::Mat frame_rect(frame, cv::Rect(frame.cols / 5 * 2, frame.rows / 9 * 8, frame.cols / 5, frame.rows / 9));
-							cv::Mat frame_resize;
-							cv::resize(frame_rect, frame_resize, cv::Size(), global_scale, global_scale);
+							cv::Mat frame_rect(frame, cv::Rect(frame.cols *(920.0 / 1920.0), frame.rows *(992.0 / 1080.0), frame.cols *(260.0/1920.0), frame.rows *(44.0/1080.0)));
 							cv::Mat result;
-							cv::matchTemplate(frame_resize, temp, result, CV_TM_CCORR_NORMED);
+							cv::matchTemplate(frame_rect, temp, result, CV_TM_CCORR_NORMED);
 							cv::Point pt;
 							double max_value;
 							cv::minMaxLoc(result, NULL, &max_value, NULL, &pt);
@@ -269,6 +263,7 @@ int main() {
 								key_frames.push(i);
 								std::cout << "  Found";
 							}
+
 						}
 						catch (...) {
 
@@ -311,8 +306,8 @@ int main() {
 						}
 						else {
 							command("ffmpeg -ss " + std::to_string(key_frames_grouped[i][0] / FPS - (params.ADDITIONAL_TIME_BEFORE_KILL))
-								+ " -i \"" + target_file + "\" -t " + std::to_string((key_frames_grouped[i][key_frames_grouped[i].size() - 1] - key_frames_grouped[i][0]) / FPS + (params.ADDITIONAL_TIME_AFTER_KILL))
-								+ " -c:v copy -c:a copy -async 1 -strict -2 \"output/" + std::to_string(output_file_count) + "-" + target_file_name + ".mp4\"");
+								+ " -i \"" + target_file + "\" -ss 0 -t " + std::to_string((key_frames_grouped[i][key_frames_grouped[i].size() - 1] - key_frames_grouped[i][0]) / FPS + (params.ADDITIONAL_TIME_AFTER_KILL))
+								+ " -map 0 -c:v copy -c:a copy -async 1 -strict -2 \"output/" + std::to_string(output_file_count) + "-" + target_file_name + ".mp4\"");
 						}
 						ofs << "file \'" + std::to_string(output_file_count) + "-" + target_file_name + ".mp4\'" << std::endl;
 						output_file_count++;
@@ -332,8 +327,8 @@ int main() {
 				strftime(str, sizeof(str), "%Y%m%d-%H%M%S", &tm);
 
 				std::string output_file_name(str);
-				if (params.OUTPUT_ENCORD == 1) {
-					command("ffmpeg -safe 0 -vcodec hevc -f concat -i output/files.txt " + output_file_name + ".mp4");
+				if (params.OUTPUT_ENCORD == 1) {//  -vcodec hevc
+					command("ffmpeg -safe 0 -f concat -i output/files.txt " + output_file_name + ".mp4");
 				}
 				else {
 					command("ffmpeg -safe 0 -f concat -i output/files.txt -c:v copy -c:a copy -map 0:v -map 0:a " + output_file_name + ".mp4");
@@ -350,8 +345,8 @@ int main() {
 		strftime(str, sizeof(str), "%Y%m%d-%H%M%S", &tm);
 
 		std::string output_file_name(str);
-		if (params.OUTPUT_ENCORD == 1) {
-			command("ffmpeg -safe 0 -vcodec hevc -f concat -i output/files.txt " + output_file_name + ".mp4");
+		if (params.OUTPUT_ENCORD == 1) {//  -vcodec hevc
+			command("ffmpeg -safe 0 -f concat -i output/files.txt " + output_file_name + ".mp4");
 		}
 		else {
 			command("ffmpeg -safe 0 -f concat -i output/files.txt -c:v copy -c:a copy -map 0:v -map 0:a " + output_file_name + ".mp4");

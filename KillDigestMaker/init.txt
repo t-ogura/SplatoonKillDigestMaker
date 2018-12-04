@@ -1,10 +1,7 @@
 %% パラメータ %%
 
-% テンプレートマッチングするときの画像のスケール
-IMAGE_PROCESSING_SCALE_FACTOR 0.25
-
 % テンプレート検出の閾値
-TAMPLATE_MATCHING_THRESHOLD 0.80
+TAMPLATE_MATCHING_THRESHOLD 0.85
 
 % キルの前の何秒間から採用するか
 ADDITIONAL_TIME_BEFORE_KILL 2.5
