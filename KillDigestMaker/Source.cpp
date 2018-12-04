@@ -159,6 +159,42 @@ void command(std::string cmd) {
 	system(".\\bat.bat");
 }
 
+std::string replace_all(std::string s, std::string target, std::string replacement) {
+
+	if (!target.empty()) {
+		std::string::size_type pos = 0;
+		while ((pos = s.find(target, pos)) != std::string::npos) {
+			s.replace(pos, target.length(), replacement);
+			pos += replacement.length();
+		}
+	}
+	return s;
+}
+
+void make_py_file(std::string video_file, double A, double B) {
+
+	std::ofstream ofs("avidemux_project.py");
+	ofs << "#PY  <- Needed to identify #" << std::endl;
+	ofs << "#--automatically built--" << std::endl;
+	ofs << "" << std::endl;
+	ofs << "adm = Avidemux()" << std::endl;
+	std::string video_abs_path = fs::absolute(fs::path(video_file)).string();
+	ofs << "adm.loadVideo(\"" << replace_all(replace_all(video_abs_path, "\\", "/"), "_", "\\_") << "\")" << std::endl;
+	ofs << "adm.clearSegments()" << std::endl;
+	ofs << "adm.videoCodec(\"Copy\")" << std::endl;
+	ofs << "adm.audioClearTracks()" << std::endl;
+	ofs << "adm.setSourceTrackLanguage(0,\"unknown\")" << std::endl;
+	ofs << "adm.audioAddTrack(0)" << std::endl;
+	ofs << "adm.audioCodec(0, \"copy\");" << std::endl;
+	ofs << "adm.audioSetDrc(0, 0)" << std::endl;
+	ofs << "adm.audioSetShift(0, 0,0)" << std::endl;
+	ofs << "adm.setContainer(\"MP4\", \"muxerType=0\", \"useAlternateMp3Tag=True\")" << std::endl;
+	ofs << "adm.addSegment(0, 0, " << std::to_string(10000000000000000) << ")" << std::endl;
+	ofs << "adm.markerA = " << std::to_string((int)(A * 1000000)) << std::endl;
+	ofs << "adm.markerB = " << std::to_string((int)(B * 1000000)) << std::endl;
+}
+
+
 int main() {
 
 	Parameters params = Parameters();
@@ -305,9 +341,14 @@ int main() {
 								+ " -vcodec hevc \"output/" + std::to_string(output_file_count) + "-" + target_file_name + ".mp4\"");
 						}
 						else {
-							command("ffmpeg -ss " + std::to_string(key_frames_grouped[i][0] / FPS - (params.ADDITIONAL_TIME_BEFORE_KILL))
-								+ " -i \"" + target_file + "\" -ss 0 -t " + std::to_string((key_frames_grouped[i][key_frames_grouped[i].size() - 1] - key_frames_grouped[i][0]) / FPS + (params.ADDITIONAL_TIME_AFTER_KILL))
-								+ " -map 0 -c:v copy -c:a copy -async 1 -strict -2 \"output/" + std::to_string(output_file_count) + "-" + target_file_name + ".mp4\"");
+							std::string python_file = fs::absolute(fs::path("avidemux_project.py")).string();
+							make_py_file(target_file, key_frames_grouped[i][0] / FPS - (params.ADDITIONAL_TIME_BEFORE_KILL), key_frames_grouped[i][key_frames_grouped[i].size() - 1] / FPS + (params.ADDITIONAL_TIME_AFTER_KILL));
+
+							command("avidemux_cli --run \"" + python_file + "\" --save \"output/" + std::to_string(output_file_count) + "-" + target_file_name + ".mp4\" --quit");
+
+							//command("ffmpeg -ss " + std::to_string(key_frames_grouped[i][0] / FPS - (params.ADDITIONAL_TIME_BEFORE_KILL))
+							//	+ " -i \"" + target_file + "\" -ss 0 -t " + std::to_string((key_frames_grouped[i][key_frames_grouped[i].size() - 1] - key_frames_grouped[i][0]) / FPS + (params.ADDITIONAL_TIME_AFTER_KILL))
+							//	+ " -map 0 -c:v copy -c:a copy -async 1 -strict -2 \"output/" + std::to_string(output_file_count) + "-" + target_file_name + ".mp4\"");
 						}
 						ofs << "file \'" + std::to_string(output_file_count) + "-" + target_file_name + ".mp4\'" << std::endl;
 						output_file_count++;

@@ -18,8 +18,8 @@ CANDIDATE_FRAME_NUM 5.0
 % 何秒ごとにフレームを検索するか
 SEARCHING_FRAME_INTERVAL 1.0
 
-% カット編集でエンコードするか (0 or 1)
-CUT_OUT_ENCORD 1
+% カット編集でエンコードするか (0 or 1) エンコードしないとカット位置があいまいになります
+CUT_OUT_ENCORD 0
 
 % 接合編集でエンコードするか (0 or 1)
 OUTPUT_ENCORD 0
