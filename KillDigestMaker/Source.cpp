@@ -63,6 +63,18 @@ public:
 				else if (splited_line[0] == "OUTPUT_IGNORE") {
 					OUTPUT_IGNORE = std::atoi(splited_line[1].c_str());
 				}
+				else if (splited_line[0] == "MOVIE_SIZE_DESIGNATION") {
+					MOVIE_SIZE_DESIGNATION = std::atoi(splited_line[1].c_str());
+				}
+				else if (splited_line[0] == "MOVIE_SIZE_HEIGHT") {
+					MOVIE_SIZE_HEIGHT = std::atoi(splited_line[1].c_str());
+				}
+				else if (splited_line[0] == "WIN_DETECTION") {
+					WIN_DETECTION = std::atoi(splited_line[1].c_str());
+				}
+				else if (splited_line[0] == "LOSE_DETECTION") {
+					LOSE_DETECTION = std::atoi(splited_line[1].c_str());
+				}
 			}
 		}
 		display_parameters();
@@ -81,6 +93,8 @@ public:
 	int OUTPUT_IGNORE;
 	int MOVIE_SIZE_DESIGNATION;
 	int MOVIE_SIZE_HEIGHT;
+	int WIN_DETECTION;
+	int LOSE_DETECTION;
 
 private:
 	std::ifstream ifs;
@@ -133,6 +147,8 @@ private:
 		OUTPUT_IGNORE = 0;
 		MOVIE_SIZE_DESIGNATION = 0;
 		MOVIE_SIZE_HEIGHT = 1080;
+		WIN_DETECTION = 0;
+		LOSE_DETECTION = 0;
 	}
 
 	void display_parameters() {
@@ -148,7 +164,9 @@ private:
 			"CUT_OUT_IGNORE\t" << CUT_OUT_IGNORE << std::endl <<
 			"OUTPUT_IGNORE\t" << OUTPUT_IGNORE << std::endl <<
 			"MOVIE_SIZE_DESIGNATION\t" << MOVIE_SIZE_DESIGNATION << std::endl <<
-			"MOVIE_SIZE_HEIGHT\t" << MOVIE_SIZE_HEIGHT << std::endl;
+			"MOVIE_SIZE_HEIGHT\t" << MOVIE_SIZE_DESIGNATION << std::endl <<
+			"WIN_DETECTION\t" << MOVIE_SIZE_DESIGNATION << std::endl <<
+			"LOSE_DETECTION\t" << MOVIE_SIZE_HEIGHT << std::endl;
 	}
 };
 
@@ -274,6 +292,8 @@ int main() {
 					float temp_scale = cap.get(CV_CAP_PROP_FRAME_HEIGHT) / 1080.f;
 
 					cv::Mat temp = cv::imread("template.jpg");
+					cv::Mat win_temp = cv::imread("win_template.jpg");
+					cv::Mat lose_temp = cv::imread("lose_template.jpg");
 
 					std::queue<int> key_frames;
 
@@ -288,8 +308,8 @@ int main() {
 						}
 						std::cout << "Searching kill frame... " << i * 100 / (float)frame_num << "%";
 
-						try {
-							cv::Mat frame_rect(frame, cv::Rect(frame.cols *(920.0 / 1920.0), frame.rows *(992.0 / 1080.0), frame.cols *(260.0/1920.0), frame.rows *(44.0/1080.0)));
+						try { // for kill digest
+							cv::Mat frame_rect(frame, cv::Rect(frame.cols *(920.0 / 1920.0), frame.rows *(992.0 / 1080.0), frame.cols *(260.0 / 1920.0), frame.rows *(44.0 / 1080.0)));
 							cv::Mat result;
 							cv::matchTemplate(frame_rect, temp, result, CV_TM_CCORR_NORMED);
 							cv::Point pt;
@@ -297,11 +317,49 @@ int main() {
 							cv::minMaxLoc(result, NULL, &max_value, NULL, &pt);
 							if (max_value > (params.TAMPLATE_MATCHING_THRESHOLD)) {
 								key_frames.push(i);
-								std::cout << "  Found";
+								std::cout << "  Kill!!";
 							}
 
 						}
 						catch (...) {
+
+						}
+						if (params.WIN_DETECTION == 1) {
+							try { // for win detection
+								cv::Mat frame_rect(frame, cv::Rect(frame.cols *(36.0 / 1920.0), frame.rows *(54.0 / 1080.0), frame.cols *(206.0 / 1920.0), frame.rows *(74.0 / 1080.0)));
+								cv::Mat result;
+								cv::matchTemplate(frame_rect, win_temp, result, CV_TM_CCORR_NORMED);
+								cv::Point pt;
+								double max_value;
+								cv::minMaxLoc(result, NULL, &max_value, NULL, &pt);
+								if (max_value > (params.TAMPLATE_MATCHING_THRESHOLD)) {
+									key_frames.push(i);
+									std::cout << "  Win!!";
+								}
+
+							}
+							catch (...) {
+
+							}
+
+						}
+						if (params.LOSE_DETECTION == 1) {
+							try { // for win detection
+								cv::Mat frame_rect(frame, cv::Rect(frame.cols *(32.0 / 1920.0), frame.rows *(64.0 / 1080.0), frame.cols *(268.0 / 1920.0), frame.rows *(68.0 / 1080.0)));
+								cv::Mat result;
+								cv::matchTemplate(frame_rect, lose_temp, result, CV_TM_CCORR_NORMED);
+								cv::Point pt;
+								double max_value;
+								cv::minMaxLoc(result, NULL, &max_value, NULL, &pt);
+								if (max_value > (params.TAMPLATE_MATCHING_THRESHOLD)) {
+									key_frames.push(i);
+									std::cout << "  Lose...";
+								}
+
+							}
+							catch (...) {
+
+							}
 
 						}
 						std::cout << std::endl;
